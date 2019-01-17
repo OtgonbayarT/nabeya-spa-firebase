@@ -1,5 +1,5 @@
-<template>
-  <div>
+<template height="100%">
+  <div height="100%">
     <v-toolbar flat color="white">
       <v-toolbar-title>My CRUD</v-toolbar-title>
       <v-divider class="mx-2" inset vertical></v-divider>
@@ -27,12 +27,26 @@
                 <v-select v-model="editedItem.branch" :items="setOptions" label="Салбарын нэр" item-text="name" item-value="id"></v-select>
               </v-flex>
               <v-flex xs12>
-                <v-select v-model="editedItem.item" :items="items" label="Бараа" @change="changeItem" item-text="name"
+                <v-select v-model="editedItem.item" :items="items" label="Бараа" @change="changeItem" item-text="name" multiple
                   item-value="id"></v-select>
               </v-flex>
-              <v-flex xs12>
+              <v-flex xs12 >
                 <v-text-field v-model="editedItem.billnumber" label="Баримтын дугаар" type="number"></v-text-field>
               </v-flex>
+              <v-card v-for="(item, index) in selectedItems" xs12 v-bind:key="item" v-bind:index="index">
+                <span>{{getItemName(item)}}</span>
+                <v-layout row wrap>
+                  <v-flex xs2 pl-2 pr-2>
+                    <v-text-field v-model="editedItem.editedItemDetail[item].qty" label="Ширхэг" type="number"></v-text-field>
+                  </v-flex>
+                  <v-flex xs5 pl-2 pr-2>
+                    <v-text-field v-model="editedItem.editedItemDetail[item].price" label="Үнэ" type="number"></v-text-field>
+                  </v-flex>
+                  <v-flex xs5 pl-2 pr-2>
+                    <v-text-field v-model="editedItem.editedItemDetail[item].total" label="Нийт"></v-text-field>
+                  </v-flex>
+                </v-layout>
+              </v-card>
               <v-flex xs12>
                 <v-text-field v-model="editedItem.qty" label="Ширхэг" type="number"></v-text-field>
               </v-flex>
@@ -74,7 +88,7 @@
         </v-card>
       </v-dialog>
     </v-toolbar>
-    <v-data-table :headers="headers" :items="expeditures" class="elevation-1">
+    <v-data-table :headers="headers" :items="expeditures" class="elevation-1" height="100%">
       <template slot="items" slot-scope="props">
         <td>{{ props.item.customer }}</td>
         <td class="text-xs-right">{{ props.item.branch }}</td>
@@ -120,6 +134,7 @@ export default {
     branchs: [],
     menu2: false,
     expeditures: [],
+    selectedItems: [],
     items: [
       { id: 'item1', name: 'Жигнэмэг, Шанзтай', price: 13200 },
       { id: 'item2', name: 'Жигнэмэг, Давстай', price: 9680 },
@@ -138,10 +153,13 @@ export default {
       suppliedDate: new Date().toISOString().substr(0, 10),
       customer: '',
       branch: '',
+      items:
+        { item: 'item1', qty: 1, price: 13200, total: 0 },
       item: '',
       price: 0,
       total: 0,
-      billnumber: 0
+      billnumber: 0,
+      editedItemDetail: {}
     },
     defaultItem: {
       qty: 1,
@@ -151,10 +169,12 @@ export default {
       suppliedDate: new Date().toISOString().substr(0, 10),
       customer: '',
       branch: '',
+      items: {},
       item: '',
       price: 0,
       total: 0,
-      billnumber: 0
+      billnumber: 0,
+      defaultItemDetail: {}
     }
   }),
 
@@ -207,8 +227,16 @@ export default {
       this.editedItem.hasBranch = this.customers.find(o => o.id === selectedId).hasBranch
       this.editedItem.branch = ''
     },
-    changeItem: function (selectedId) {
-      this.editedItem.price = this.items.find(o => o.id === selectedId).price
+    changeItem: function (selectedIds) {
+      this.editedItem.editedItemDetail = {}
+      this.selectedItems = selectedIds
+    },
+    getPrice: function (itemId) {
+      return this.items.find(o => o.id === itemId).price
+    },
+    getItemName: function (itemId) {
+      this.editedItem.editedItemDetail[itemId] = { item: '', qty: 1, price: 0, total: 0 }
+      return this.items.find(o => o.id === itemId).name
     },
     initialize () {
       this.$store.dispatch('loadExpenditures').then(() => {
@@ -250,7 +278,7 @@ export default {
       } else {
         this.editedItem.datetime = this.submittableDateTime
         console.log(this.editedItem)
-        this.$store.dispatch('createExpenditure', this.editedItem)
+        // this.$store.dispatch('createExpenditure', this.editedItem)
       }
       this.close()
     }

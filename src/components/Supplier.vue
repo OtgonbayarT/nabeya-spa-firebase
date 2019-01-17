@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!loading">
+  <div>
     <v-toolbar flat color="white">
       <v-toolbar-title>My CRUD</v-toolbar-title>
       <v-divider
@@ -29,6 +29,14 @@
               <v-flex xs12>
                 <v-menu :close-on-content-click="false" v-model="menu2" :nudge-right="40"
                   lazy transition="scale-transition" offset-y full-width min-width="290px">
+                  <v-text-field slot="activator" v-model="editedItem.madeDate"
+                    label="Нийлүүлсэн Огноо" prepend-icon="event" readonly></v-text-field>
+                  <v-date-picker v-model="editedItem.madeDate" @input="menu2 = false"></v-date-picker>
+                </v-menu>
+              </v-flex>
+              <v-flex xs12>
+                <v-menu :close-on-content-click="false" v-model="menu2" :nudge-right="40"
+                  lazy transition="scale-transition" offset-y full-width min-width="290px">
                   <v-text-field slot="activator" v-model="editedItem.suppliedDate"
                     label="Нийлүүлсэн Огноо" prepend-icon="event" readonly></v-text-field>
                   <v-date-picker v-model="editedItem.suppliedDate" @input="menu2 = false"></v-date-picker>
@@ -49,7 +57,7 @@
       :headers="headers"
       :items="desserts"
       class="elevation-1"
-    >
+    width="100%" height="100%">
       <template slot="items" slot-scope="props">
         <td>{{ props.item.name }}</td>
         <td class="text-xs-right">{{ props.item.calories }}</td>
@@ -76,9 +84,6 @@
         <v-btn color="primary" @click="initialize">Reset</v-btn>
       </template>
     </v-data-table>
-  </div>
-  <div v-else>
-
   </div>
 </template>
 
@@ -115,6 +120,7 @@ export default {
       date: new Date(),
       time: new Date(),
       datetime: '',
+      madeDate: new Date().toISOString().substr(0, 10),
       suppliedDate: new Date().toISOString().substr(0, 10),
       supplier: 'Жүр үр ХХК 2729695',
       item: ''
@@ -124,6 +130,7 @@ export default {
       date: new Date(),
       time: new Date(),
       datetime: '',
+      madeDate: new Date().toISOString().substr(0, 10),
       suppliedDate: new Date().toISOString().substr(0, 10),
       supplier: 'Жүр үр ХХК 2729695',
       item: ''
