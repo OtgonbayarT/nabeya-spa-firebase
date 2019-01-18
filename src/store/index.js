@@ -35,6 +35,20 @@ export const store = new Vuex.Store({
     createExpenditure (state, payload) {
       state.loadedExpenditures.push(payload)
     },
+    updateExpenditure (state, payload) {
+      const expenditure = state.loadedExpenditures.find(expenditure => {
+        return expenditure.id === payload.id
+      })
+
+      expenditure.suppliedDate = payload.suppliedDate
+      expenditure.customer = payload.customer
+      expenditure.branch = payload.branch
+      expenditure.itemDetail = payload.itemDetail
+      expenditure.total = payload.total
+      expenditure.billnumber = payload.billnumber
+      // expenditure.date = payload.datetime.toISOString()
+      // expenditure.creatorId = getters.user.email
+    },
     removeExpenditure (state, payload) {
       state.loadedExpenditures.splice(state.loadedExpenditures.findIndex(o => o.id === payload), 1)
     },
@@ -91,8 +105,7 @@ export const store = new Vuex.Store({
         fat: payload.fat,
         carbs: payload.carbs,
         protein: payload.protein,
-        date: payload.datetime.toISOString(),
-        creatorId: getters.user.email
+        date: payload.datetime.toISOString()
       }
       firebase.database().ref('supplies').push(supply)
         .then((data) => {
@@ -138,12 +151,10 @@ export const store = new Vuex.Store({
     },
     createExpenditure ({commit, getters}, payload) {
       const expenditure = {
-        qty: payload.qty,
         suppliedDate: payload.suppliedDate,
         customer: payload.customer,
         branch: payload.branch,
-        item: payload.item,
-        price: payload.price,
+        itemDetail: payload.itemDetail,
         total: payload.total,
         billnumber: payload.billnumber,
         date: payload.datetime.toISOString(),
@@ -159,6 +170,27 @@ export const store = new Vuex.Store({
         })
         .catch((error) => {
           console.log(error)
+        })
+    },
+    updateExpenditure ({commit, getters}, payload) {
+      commit('setLoading', true)
+      const updateObj = {}
+      updateObj.suppliedDate = payload.suppliedDate
+      updateObj.customer = payload.customer
+      updateObj.branch = payload.branch
+      updateObj.itemDetail = payload.itemDetail
+      updateObj.total = payload.total
+      updateObj.billnumber = payload.billnumber
+      // updateObj.date = payload.datetime.toISOString(),
+      updateObj.creatorId = getters.user.email
+      firebase.database().ref('expenditures').child(payload.id).update(updateObj)
+        .then(() => {
+          commit('setLoading', false)
+          commit('updateExpenditure', payload)
+        })
+        .catch(error => {
+          console.log(error)
+          commit('setLoading', false)
         })
     },
     removeExpenditure ({commit}, payload) {
@@ -186,12 +218,10 @@ export const store = new Vuex.Store({
             for (let key in obj) {
               expenditures.push({
                 id: key,
-                qty: obj[key].qty,
                 suppliedDate: obj[key].suppliedDate,
                 customer: obj[key].customer,
                 branch: obj[key].branch,
-                item: obj[key].item,
-                price: obj[key].price,
+                itemDetail: obj[key].itemDetail,
                 total: obj[key].total,
                 billnumber: obj[key].billnumber,
                 date: obj[key].date,

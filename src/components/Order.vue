@@ -27,34 +27,27 @@
                 <v-select v-model="editedItem.branch" :items="setOptions" label="Салбарын нэр" item-text="name" item-value="id"></v-select>
               </v-flex>
               <v-flex xs12>
-                <v-select v-model="editedItem.item" :items="items" label="Бараа" @change="changeItem" item-text="name" multiple
-                  item-value="id"></v-select>
+                <v-select multiple v-model="selectedItems" :items="items" label="Бараа" @change="changeItem" item-text="name" return-object></v-select>
               </v-flex>
               <v-flex xs12 >
                 <v-text-field v-model="editedItem.billnumber" label="Баримтын дугаар" type="number"></v-text-field>
               </v-flex>
-              <v-card v-for="(item, index) in selectedItems" xs12 v-bind:key="item" v-bind:index="index">
-                <span>{{getItemName(item)}}</span>
+              <v-card v-for="item in selectedItems" xs12 v-bind:key="item.id">
+                <span>{{item.name}}</span>
                 <v-layout row wrap>
                   <v-flex xs2 pl-2 pr-2>
-                    <v-text-field v-model="editedItem.editedItemDetail[item].qty" label="Ширхэг" type="number"></v-text-field>
+                    <v-text-field v-model="editedItem.itemDetail[item.id].qty" label="Ширхэг" type="number"></v-text-field>
                   </v-flex>
                   <v-flex xs5 pl-2 pr-2>
-                    <v-text-field v-model="editedItem.editedItemDetail[item].price" label="Үнэ" type="number"></v-text-field>
+                    <v-text-field v-model="editedItem.itemDetail[item.id].price" label="Үнэ" type="number"></v-text-field>
                   </v-flex>
                   <v-flex xs5 pl-2 pr-2>
-                    <v-text-field v-model="editedItem.editedItemDetail[item].total" label="Нийт"></v-text-field>
+                    <v-text-field v-model="editedItem.itemDetail[item.id].total" label="Нийт"></v-text-field>
                   </v-flex>
                 </v-layout>
               </v-card>
               <v-flex xs12>
-                <v-text-field v-model="editedItem.qty" label="Ширхэг" type="number"></v-text-field>
-              </v-flex>
-              <v-flex xs12>
-                <v-text-field v-model="editedItem.price" label="Үнэ" type="number"></v-text-field>
-              </v-flex>
-              <v-flex xs12>
-                <v-text-field v-model="setTotalPrice" label="Нийт"></v-text-field>
+                <v-text-field v-model="editedItem.total" label="Нийт"></v-text-field>
               </v-flex>
               <v-flex xs12>
                 <v-menu
@@ -94,8 +87,6 @@
         <td class="text-xs-right">{{ props.item.branch }}</td>
         <td class="text-xs-right">{{ props.item.item }}</td>
         <td class="text-xs-right">{{ props.item.billnumber }}</td>
-        <td class="text-xs-right">{{ props.item.qty }}</td>
-        <td class="text-xs-right">{{ props.item.price }}</td>
         <td class="text-xs-right">{{ props.item.total }}</td>
         <td class="text-xs-right">{{ props.item.suppliedDate }}</td>
         <td class="justify-center layout px-0">
@@ -124,8 +115,6 @@ export default {
       { text: 'Салбарын нэр', value: 'branch' },
       { text: 'Барааны Нэр', value: 'item' },
       { text: 'Биллын №', value: 'billnumber' },
-      { text: 'Тоо', value: 'qty' },
-      { text: 'Үнэ', value: 'price' },
       { text: 'Нийт', value: 'total' },
       { text: 'Нийлүүлсэн огноо', value: 'suppliedDate' },
       { text: 'Actions', value: 'name', sortable: false }
@@ -146,35 +135,26 @@ export default {
     ],
     editedIndex: -1,
     editedItem: {
-      qty: 1,
       date: new Date(),
       time: new Date(),
       datetime: '',
       suppliedDate: new Date().toISOString().substr(0, 10),
       customer: '',
       branch: '',
-      items:
-        { item: 'item1', qty: 1, price: 13200, total: 0 },
-      item: '',
-      price: 0,
       total: 0,
       billnumber: 0,
-      editedItemDetail: {}
+      itemDetail: {}
     },
     defaultItem: {
-      qty: 1,
       date: new Date(),
       time: new Date(),
       datetime: '',
       suppliedDate: new Date().toISOString().substr(0, 10),
       customer: '',
       branch: '',
-      items: {},
-      item: '',
-      price: 0,
       total: 0,
       billnumber: 0,
-      defaultItemDetail: {}
+      itemDetail: {}
     }
   }),
 
@@ -182,9 +162,9 @@ export default {
     formTitle () {
       return this.editedIndex === -1 ? 'Шинэ зарлага' : 'Зарлага засах'
     },
-    setTotalPrice: function () {
-      return this.editedItem.qty * this.editedItem.price
-    },
+    // setTotalPrice: function () {
+    //   return this.editedItem.qty * this.editedItem.price
+    // },
     setOptions: function () {
       let branchs = this.branchs
       const specificBranch = []
@@ -227,17 +207,19 @@ export default {
       this.editedItem.hasBranch = this.customers.find(o => o.id === selectedId).hasBranch
       this.editedItem.branch = ''
     },
-    changeItem: function (selectedIds) {
-      this.editedItem.editedItemDetail = {}
-      this.selectedItems = selectedIds
+    changeItem: function (selectedItems) {
+      this.editedItem.itemDetail = {}
+      this.selectedItems = selectedItems
+      for (let item of selectedItems) {
+        this.editedItem.itemDetail[item.id] = { item: item.name, qty: 1, price: item.price, total: item.price }
+      }
     },
-    getPrice: function (itemId) {
-      return this.items.find(o => o.id === itemId).price
-    },
-    getItemName: function (itemId) {
-      this.editedItem.editedItemDetail[itemId] = { item: '', qty: 1, price: 0, total: 0 }
-      return this.items.find(o => o.id === itemId).name
-    },
+    // getPrice: function (itemId) {
+    //   return this.items.find(o => o.id === itemId).price
+    // },
+    // getItemName: function (itemId) {
+    //   return this.items.find(o => o.id === itemId).name
+    // },
     initialize () {
       this.$store.dispatch('loadExpenditures').then(() => {
         this.expeditures = this.$store.getters.loadedExpenditures
@@ -252,6 +234,11 @@ export default {
 
     editItem (item) {
       this.editedIndex = this.expeditures.indexOf(item)
+      for (let obj of this.items) {
+        if (Object.keys(item.itemDetail).includes(obj.id)) {
+          this.selectedItems.push(obj)
+        }
+      }
       this.editedItem = Object.assign({}, item)
       this.dialog = true
     },
@@ -267,6 +254,7 @@ export default {
     close () {
       this.dialog = false
       setTimeout(() => {
+        this.selectedItems = []
         this.editedItem = Object.assign({}, this.defaultItem)
         this.editedIndex = -1
       }, 300)
@@ -275,10 +263,10 @@ export default {
     save () {
       if (this.editedIndex > -1) {
         Object.assign(this.expeditures[this.editedIndex], this.editedItem)
+        this.$store.dispatch('updateExpenditure', this.editedItem)
       } else {
         this.editedItem.datetime = this.submittableDateTime
-        console.log(this.editedItem)
-        // this.$store.dispatch('createExpenditure', this.editedItem)
+        this.$store.dispatch('createExpenditure', this.editedItem)
       }
       this.close()
     }
