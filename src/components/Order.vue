@@ -47,7 +47,7 @@
                 </v-layout>
               </v-card>
               <v-flex xs12>
-                <v-text-field v-model="editedItem.total" label="Нийт"></v-text-field>
+                <v-text-field v-model="setTotalPrice" label="Нийт"></v-text-field>
               </v-flex>
               <v-flex xs12>
                 <v-menu
@@ -83,12 +83,11 @@
     </v-toolbar>
     <v-data-table :headers="headers" :items="expeditures" class="elevation-1" height="100%">
       <template slot="items" slot-scope="props">
-        <td>{{ props.item.customer }}</td>
-        <td class="text-xs-right">{{ props.item.branch }}</td>
-        <td class="text-xs-right">{{ props.item.item }}</td>
-        <td class="text-xs-right">{{ props.item.billnumber }}</td>
-        <td class="text-xs-right">{{ props.item.total }}</td>
-        <td class="text-xs-right">{{ props.item.suppliedDate }}</td>
+        <td>{{ setCustomerName(props.item.customer) }}</td>
+        <td>{{ setBranchName(props.item.customer, props.item.branch) }}</td>
+        <td class="text-xs-left">{{ props.item.billnumber }}</td>
+        <td class="text-xs-left">{{ props.item.total }}</td>
+        <td class="text-xs-left">{{ props.item.suppliedDate }}</td>
         <td class="justify-center layout px-0">
           <v-icon small class="mr-2" @click="editItem(props.item)">edit</v-icon>
           <v-icon small @click="deleteItem(props.item)">delete</v-icon>
@@ -112,8 +111,7 @@ export default {
         sortable: false,
         value: 'customer'
       },
-      { text: 'Салбарын нэр', value: 'branch' },
-      { text: 'Барааны Нэр', value: 'item' },
+      { text: 'Салбарын нэр', align: 'left', value: 'branch' },
       { text: 'Биллын №', value: 'billnumber' },
       { text: 'Нийт', value: 'total' },
       { text: 'Нийлүүлсэн огноо', value: 'suppliedDate' },
@@ -162,9 +160,13 @@ export default {
     formTitle () {
       return this.editedIndex === -1 ? 'Шинэ зарлага' : 'Зарлага засах'
     },
-    // setTotalPrice: function () {
-    //   return this.editedItem.qty * this.editedItem.price
-    // },
+    setTotalPrice: function () {
+      let total = 0
+      Object.keys(this.editedItem.itemDetail).forEach(value => {
+        total += this.editedItem.itemDetail[value].qty * this.editedItem.itemDetail[value].price
+      })
+      return total
+    },
     setOptions: function () {
       let branchs = this.branchs
       const specificBranch = []
@@ -193,6 +195,12 @@ export default {
   },
 
   watch: {
+    setTotalPrice: {
+      deep: true,
+      handler: function (newTotal) {
+        this.editedItem.total = newTotal
+      }
+    },
     dialog (val) {
       val || this.close()
     }
@@ -203,6 +211,23 @@ export default {
   },
 
   methods: {
+    setCustomerName: function (id) {
+      let customer = this.customers.find(o => o.id === id)
+      return customer.label + ' | ' + customer.namejp
+    },
+    setBranchName: function (customer, id) {
+      for (let key in this.branchs[customer]) {
+        if (key === id) {
+          let branch = this.branchs[customer][key]
+          return branch.name + ' | ' + branch.namejp
+        }
+      }
+    },
+    changeItemDetail: function () {
+      Object.keys(this.editedItem.itemDetail).forEach(value => {
+        this.editedItem.itemDetail[value].total = this.editedItem.itemDetail[value].qty * this.editedItem.itemDetail[value].price
+      })
+    },
     changeCustomer: function (selectedId) {
       this.editedItem.hasBranch = this.customers.find(o => o.id === selectedId).hasBranch
       this.editedItem.branch = ''

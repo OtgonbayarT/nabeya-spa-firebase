@@ -79,7 +79,7 @@ export default {
       if (this.isAuthenticated) {
         return [
           { title: 'Home', path: '/home', icon: 'home' },
-          { title: 'Supplier', path: '/supplier', icon: 'gavel' },
+          // { title: 'Supplier', path: '/supplier', icon: 'gavel' },
           { title: 'Order', path: '/order', icon: 'gavel' }
         ]
       } else {
