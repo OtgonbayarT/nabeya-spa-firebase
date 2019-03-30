@@ -36,18 +36,18 @@
                 <span>{{item.name}}</span>
                 <v-layout row wrap>
                   <v-flex xs2 pl-2 pr-2>
-                    <v-text-field v-model="editedItem.itemDetail[item.id].qty" label="Ширхэг" type="number"></v-text-field>
+                    <v-text-field v-model="editedItem.itemDetail[item.id].qty" label="Ширхэг" type="number" @input="changeItemDetail(item.id)"></v-text-field>
                   </v-flex>
                   <v-flex xs5 pl-2 pr-2>
-                    <v-text-field v-model="editedItem.itemDetail[item.id].price" label="Үнэ" type="number"></v-text-field>
+                    <v-text-field v-model="editedItem.itemDetail[item.id].price" label="Үнэ" type="number" @input="changeItemDetail(item.id)"></v-text-field>
                   </v-flex>
                   <v-flex xs5 pl-2 pr-2>
-                    <v-text-field v-model="editedItem.itemDetail[item.id].total" label="Нийт"></v-text-field>
+                    <v-text-field :ref="item.id" v-model="editedItem.itemDetail[item.id].total" readonly label="Нийт"></v-text-field>
                   </v-flex>
                 </v-layout>
               </v-card>
               <v-flex xs12>
-                <v-text-field v-model="setTotalPrice" label="Нийт"></v-text-field>
+                <v-text-field v-model="this.editedItem.total" readonly label="Нийт"></v-text-field>
               </v-flex>
               <v-flex xs12>
                 <v-menu
@@ -160,11 +160,12 @@ export default {
     formTitle () {
       return this.editedIndex === -1 ? 'Шинэ зарлага' : 'Зарлага засах'
     },
-    setTotalPrice: function () {
+    setTotalPrice () {
       let total = 0
       Object.keys(this.editedItem.itemDetail).forEach(value => {
         total += this.editedItem.itemDetail[value].qty * this.editedItem.itemDetail[value].price
       })
+      console.log('grand total: ' + total)
       return total
     },
     setOptions: function () {
@@ -213,7 +214,9 @@ export default {
   methods: {
     setCustomerName: function (id) {
       let customer = this.customers.find(o => o.id === id)
-      return customer.label + ' | ' + customer.namejp
+      if (customer) {
+        return customer.label + ' | ' + customer.namejp
+      }
     },
     setBranchName: function (customer, id) {
       for (let key in this.branchs[customer]) {
@@ -223,10 +226,16 @@ export default {
         }
       }
     },
-    changeItemDetail: function () {
+    changeItemDetail: function (id) {
+      this.editedItem.itemDetail[id].total = this.editedItem.itemDetail[id].qty * this.editedItem.itemDetail[id].price
+      let total = 0
       Object.keys(this.editedItem.itemDetail).forEach(value => {
-        this.editedItem.itemDetail[value].total = this.editedItem.itemDetail[value].qty * this.editedItem.itemDetail[value].price
+        total += this.editedItem.itemDetail[value].qty * this.editedItem.itemDetail[value].price
       })
+      this.editedItem.total = total
+      this.$forceUpdate()
+      // const input = this.$refs[id][0]
+      // input.value = this.editedItem.itemDetail[id].total
     },
     changeCustomer: function (selectedId) {
       this.editedItem.hasBranch = this.customers.find(o => o.id === selectedId).hasBranch

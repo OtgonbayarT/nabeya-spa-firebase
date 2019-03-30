@@ -11,8 +11,8 @@
 <script>
 import Order from './Order'
 export default {
-  // components: {
-  //   Order
-  // }
+  components: {
+    Order
+  }
 }
 </script>
